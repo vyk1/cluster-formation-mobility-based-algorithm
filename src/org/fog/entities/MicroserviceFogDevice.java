@@ -468,7 +468,7 @@ public class MicroserviceFogDevice extends FogDevice {
         JSONObject object = (JSONObject) ev.getData();
         AppModule appModule = (AppModule) object.get("module");
         Application app = (Application) object.get("application");
-        System.out.println(CloudSim.clock() + getName() + " is receiving " + appModule.getName());
+        System.out.println(CloudSim.clock() + " - "+ getName() + " is receiving " + appModule.getName());
 
         sendNow(getId(), FogEvents.APP_SUBMIT, app);
         sendNow(getId(), FogEvents.LAUNCH_MODULE, appModule);
@@ -484,7 +484,7 @@ public class MicroserviceFogDevice extends FogDevice {
     protected void moduleSend(SimEvent ev) {
         JSONObject object = (JSONObject) ev.getData();
         AppModule appModule = (AppModule) object.get("module");
-        System.out.println(getName() + " is sending " + appModule.getName());
+        System.out.println(CloudSim.clock() + " - " + getName() + " is sending " + appModule.getName());
         NetworkUsageMonitor.sendingModule((double) object.get("delay"), appModule.getSize());
         MigrationDelayMonitor.setMigrationDelay((double) object.get("delay"));
 
