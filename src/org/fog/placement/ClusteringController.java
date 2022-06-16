@@ -188,21 +188,17 @@ public class ClusteringController extends SimEntity {
 
 
     private void printMigrationDelayDetails() {
-        // TODO Auto-generated method stub
         System.out.println("Total time required for module migration = " + MigrationDelayMonitor.getMigrationDelay());
     }
 
-	/*private void printFogDeviceChildren(int deviceID) {
-		// TODO Auto-generated method stub
-		System.out.println("Childs of "+getFogDeviceById(deviceID).getName());
-		for(Integer childId:getFogDeviceById(deviceID).getChildrenIds())
-			System.out.println(getFogDeviceById(childId).getName()+"("+childId+")");
-
-	}*/
+//	private void printFogDeviceChildren(int deviceID) {
+//		System.out.println("Childs of "+getFogDeviceById(deviceID).getName());
+//		for(Integer childId:getFogDeviceById(deviceID).getChildrenIds())
+//			System.out.println(getFogDeviceById(childId).getName()+"("+childId+")");
+//	}
 
     @SuppressWarnings("unchecked")
     private void processMobility(SimEvent ev) {
-        // TODO Auto-generated method stub
         FogDevice fogDevice = (FogDevice) ev.getData();
         FogDevice prevParent = getFogDeviceById(parentReference.get(fogDevice.getId()));
         FogDevice newParent = getFogDeviceById(locator.determineParent(fogDevice.getId(), CloudSim.clock()));
