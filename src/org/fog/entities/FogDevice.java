@@ -33,16 +33,6 @@ public class FogDevice extends PowerDatacenter {
 	protected Map<String, List<String>> appToModulesMap;
 	protected Map<Integer, Double> childToLatencyMap;
 
-	protected int connectedDevices;
-
-	public int getConnectedDevices() {
-		return connectedDevices;
-	}
-
-	public void setConnectedDevices(int connectedDevices) {
-		this.connectedDevices = connectedDevices;
-	}
-
 	protected Map<Integer, Integer> cloudTrafficMap;
 
 	protected double lockTime;
@@ -1079,11 +1069,9 @@ public class FogDevice extends PowerDatacenter {
 		@SuppressWarnings("deprecation")
 		Integer childIDobject = new Integer(childId);
 		if (getChildrenIds().contains(childId) && childId != getId()) {
-			setConnectedDevices(connectedDevices - 1);
 			getChildrenIds().remove(childIDobject);
 		} else if (getChildToOperatorsMap().containsKey(childId)) {
 			List<String> operatorName = getChildToOperatorsMap().get(childId);
-			setConnectedDevices(connectedDevices - 1);
 			getChildToOperatorsMap().remove(childId, operatorName);
 		}
 	}

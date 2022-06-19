@@ -100,8 +100,8 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 		case FogEvents.STOP_SIMULATION:
 			CloudSim.stopSimulation();
 			printTimeDetails();
-			printPowerDetails();
-			printCostDetails();
+//			printPowerDetails();
+//			printCostDetails();
 			printNetworkUsageDetails();
 			printMigrationDelayDetails();
 //			for (FogDevice f : fogDevices) {
@@ -169,8 +169,20 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 		}
 	}
 
-	private void processMobility(SimEvent ev) {
+	private void printFogDeviceChildren(int deviceID) {
+		System.out.println("------");
+		if (getFogDeviceById(deviceID).getChildrenIds().size() == 0) {
+			System.out.println("No Childs for " + getFogDeviceById(deviceID).getName());
+		} else {
 
+			System.out.println("Childs of " + getFogDeviceById(deviceID).getName());
+			for (Integer childId : getFogDeviceById(deviceID).getChildrenIds())
+				System.out.println(getFogDeviceById(childId).getName() + "(" + childId + ")");
+		}
+		System.out.println("------");
+	}
+
+	private void processMobility(SimEvent ev) {
 		FogDevice fogDevice = (FogDevice) ev.getData();
 		FogDevice prevParent = getFogDeviceById(parentReference.get(fogDevice.getId()));
 		FogDevice newParent = getFogDeviceById(locator.determineParent(fogDevice.getId(), CloudSim.clock()));
@@ -182,8 +194,8 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 		setNewOrchestratorNode(fogDevice, newParent);
 
 		if (prevParent.getId() != newParent.getId()) {
-			// printFogDeviceChildren(newParent.getId());
-			// printFogDeviceChildren(prevParent.getId());
+			printFogDeviceChildren(newParent.getId());
+			printFogDeviceChildren(prevParent.getId());
 
 			// common ancestor policy
 			List<Integer> newParentPath = getPathsToCloud(newParent.getId());
@@ -191,13 +203,12 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 			int commonAncestor = determineAncestor(newParentPath, prevParentPath);
 
 			fogDevice.setParentId(newParent.getId());
+			System.out.println("From ");
 			System.out.println("Child " + fogDevice.getName() + "\t----->\tParent " + newParent.getName());
 			newParent.getChildToLatencyMap().put(fogDevice.getId(), fogDevice.getUplinkLatency());
 			newParent.addChild(fogDevice.getId());
 			prevParent.removeChild(fogDevice.getId());
 
-			System.out.printf("new %s %d vs prev %s %d \n", newParent.getName(), newParent.getConnectedDevices(),
-					prevParent.getName(), prevParent.getConnectedDevices());
 			for (String applicationName : fogDevice.getActiveApplications()) {
 
 				migratingModules = getModulesToMigrate(fogDevice, commonAncestor, applicationName);
@@ -247,26 +258,40 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 	}
 
 	private void setNewOrchestratorNode(FogDevice fogDevice, FogDevice newParent) {
-//		new parent is gateway bc fogdevice is device
+//		prox
 		int newParentId = newParent.getId();
-//		c = ;
-		System.out.println(newParent.getName()+ " xhas "+newParent.getClusterMembers().size() + " members and is "+ newParent.getLevel() +" of type " + ((MicroserviceFogDevice) newParent).getDeviceType());
-		
+
 		while (newParentId != -1) {
 			if (((MicroserviceFogDevice) newParent).getDeviceType().equals(MicroserviceFogDevice.FON)) {
-				System.err.println("is fon\n");
+
 				int currentFonId = ((MicroserviceFogDevice) fogDevice).getFonId();
-				
-				FogDevice currentFon = (FogDevice) getFogDeviceById(currentFonId);
-				System.out.printf("id of current is %d\n", currentFonId);
-				System.out.println(currentFon.getName() + " yhas "+ currentFon.getClusterMembers().size()+" members and is "+ currentFon.getLevel());
-				
+
+				MicroserviceFogDevice currentFon = (MicroserviceFogDevice) getFogDeviceById(currentFonId);
+
 				if (currentFonId != newParentId) {
+
+					System.out.println("----");
+					System.out.println("NEW PARENT id is " + newParentId);
+					System.out.println(newParent.getName() + " has " + newParent.getClusterMembers().size()
+							+ " members and is " + newParent.getLevel() + " of type "
+							+ ((MicroserviceFogDevice) newParent).getDeviceType());
+					System.out.println("And with devices "
+							+ ((MicroserviceFogDevice) newParent).getControllerComponent().printFogDevices());
+
+					System.out.println("-x-");
+
+					System.out.println("CURRENT PARENT id is " + currentFonId);
+					System.out.println(currentFon.getName() + " has " + currentFon.getClusterMembers().size()
+							+ " members and is " + currentFon.getLevel() + "of type "
+							+ ((MicroserviceFogDevice) newParent).getDeviceType());
+					System.out.println("And with devices " + currentFon.getControllerComponent().printFogDevices());
+
 					((MicroserviceFogDevice) getFogDeviceById(currentFonId)).removeMonitoredDevice(fogDevice);
 					((MicroserviceFogDevice) fogDevice).setFonID(newParentId);
 					((MicroserviceFogDevice) getFogDeviceById(newParentId)).addMonitoredDevice(fogDevice);
-					System.out
-							.println("Orchestrator Node for device : " + fogDevice.getId() + " updated to " + newParentId);
+					System.out.println(
+							"Orchestrator Node for device : " + fogDevice.getId() + " updated to " + newParentId);
+					System.out.println("----");
 				}
 				break;
 			} else {
@@ -446,8 +471,10 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 
 	public void clusteringSubmit(List Levels) {
 		System.out.println(CloudSim.clock() + " Start sending Clustering Request to Fog Devices in level: " + Levels);
+		System.out.println("Cluster size: " + Levels.size());
 		for (int i = 0; i < Levels.size(); i++) {
 			int clusterLevel = (int) Levels.get(i);
+			System.out.println("current cluster level: " + clusterLevel);
 			for (FogDevice fogDevice : fogDevices) {
 				System.out.println(CloudSim.clock() + " fog Device: " + fogDevice.getName() + " with id: "
 						+ fogDevice.getId() + " is at level: " + fogDevice.getLevel());
@@ -458,6 +485,7 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 				}
 			}
 		}
+
 	}
 
 	public LocationHandler getLocator() {
