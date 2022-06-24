@@ -131,7 +131,6 @@ public class FogDevice extends PowerDatacenter {
 		this.lockTime = 0;
 
 		this.energyConsumption = 0;
-		connectedDevices = 0;
 		this.lastUtilization = 0;
 		setTotalCost(0);
 		setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
@@ -154,7 +153,6 @@ public class FogDevice extends PowerDatacenter {
 		int hostId = FogUtils.generateEntityId();
 		long storage = 1000000; // host storage
 		int bw = 10000;
-		connectedDevices = 0;
 		PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
 				peList, new StreamOperatorScheduler(peList), powerModel);
 
@@ -604,12 +602,10 @@ public class FogDevice extends PowerDatacenter {
 		if (CloudSim.getEntityName(childId).toLowerCase().contains("sensor"))
 			return;
 		if (!getChildrenIds().contains(childId) && childId != getId()) {
-			setConnectedDevices(connectedDevices + 1);
 			getChildrenIds().add(childId);
 		} else
 //        ?
 		if (!getChildToOperatorsMap().containsKey(childId)) {
-			setConnectedDevices(connectedDevices + 1);
 			getChildToOperatorsMap().put(childId, new ArrayList<String>());
 		}
 	}
