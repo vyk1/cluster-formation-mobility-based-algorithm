@@ -1,6 +1,17 @@
 package org.fog.test.perfeval;
 
-import org.apache.commons.math3.util.Pair;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -14,9 +25,14 @@ import org.fog.application.AppEdge;
 import org.fog.application.AppLoop;
 import org.fog.application.Application;
 import org.fog.application.selectivity.FractionalSelectivity;
-import org.fog.entities.*;
+import org.fog.entities.Actuator;
+import org.fog.entities.FogBroker;
+import org.fog.entities.FogDevice;
+import org.fog.entities.FogDeviceCharacteristics;
 import org.fog.entities.MicroserviceFogDevice;
 import org.fog.entities.PlacementRequest;
+import org.fog.entities.Sensor;
+import org.fog.entities.Tuple;
 import org.fog.mobilitydata.DataParser;
 import org.fog.mobilitydata.Location;
 import org.fog.mobilitydata.RandomMobilityGenerator;
@@ -32,10 +48,6 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 import org.json.simple.parser.ParseException;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Simulation setup for Microservices Application
@@ -70,7 +82,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 
     //application
     static List<Application> applications = new ArrayList<>();
-	static List<HashMap<String,List<String>>> clusters = null;
+	static List<List<String>> clusters = null;
 
     public static void main(String[] args) {
 
@@ -159,7 +171,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
             randMobilityGenerator.createRandomData(mobilityModel, i + 1, datasetReference, renewDataset);
         }
     }
-
+  
     /**
      * Creates the fog devices in the physical topology of the simulation.
      *
@@ -184,8 +196,9 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         ArrayList<String> nodes = locator.getLevelWiseResources(locator.getLevelID("Proxy"));
         nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
         
-        int blocks = (int) ((int) nodes.size()/Config.AREA);
+        int blocks = (int) Config.AREA/nodes.size();
         double suggestedRange = Config.AREA/blocks;
+        System.err.println("Blocos: "+ blocks + "Range sugerido: "+ suggestedRange);
         
         /*
          * Para cada um dos nodos
@@ -193,96 +206,77 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         for (int i = 0; i < nodes.size(); i++) {
 //        	atual: res_1
 			String atual = nodes.get(i);
-			String firstChild = null;
+			Integer index = null;
 			/*
 			 * Inicializa os clusters no primeiro caso
 			 */
 			if (clusters == null) {
-				clusters = new ArrayList<HashMap<String,List<String>>>();
-				HashMap<String, List<String>> mapaZerado = new HashMap<String, List<String>>();
+				clusters = new ArrayList<List<String>>();
+				List<String> listaZerada = new ArrayList<String>();
 				List<String> z = new ArrayList<String>();
 				z.add(atual);
-				mapaZerado.put(atual, z);
-				clusters.add(mapaZerado);
-				firstChild = atual;
+				listaZerada.addAll(z);
+				clusters.add(listaZerada);
+				index = 0;
 			} else {
 				/*
-				 * Se já tiver algo na lista dos clusters
-				 * pega o FMV, se existir
+				 * Se fmv estiver vazio,
+				 * procura a chave, percorrendo 
+				 * os clusters para achar o FMV
+				 * se fmv estiver vazio
 				 */
-				for (int j = 0; j < clusters.size(); j++) {
-					HashMap<String, List<String>> mapa = clusters.get(j);
-					
-					for (int k = 0; k < mapa.size(); k++) {
-						if (mapa.get(k).contains(atual)) {
-							firstChild = mapa.get(k);
+				if (index==null) {
+					for (int j = 0; j < clusters.size(); j++) {
+						List<String> lista = clusters.get(j);
+						
+						/*
+						 * Para cada lista de clusters,
+						 * Verifica se existe em alguma lista com
+						 * seu id
+						 */
+						if(lista.stream().anyMatch(v->v.contains(atual))) {
+							index = j;
+							System.out.printf("O fmv é %s\n",index);
+							break;
 						}
-					}
-					for (List<String> lista :mapa.values()) {
-						if (lista.contains(atual)) {
-							System.out.printf("O fmv é %s\n",firstChild);
-//							break;
-						} 
 					}
 				}
 				/*
-				 * Se não existir, o FMV
-				 * é o próprio
+				 * Se mesmo assim não existir,
+				 * o FMV É o próprio
 				 */
-				if (firstChild==null) {
-					HashMap<String, List<String>> mapaZerado = new HashMap<String, List<String>>();
+				if (index==null) {
+					List<String> listaZerada = new ArrayList<String>();
 					List<String> z = new ArrayList<String>();
 					z.add(atual);
-					mapaZerado.put(atual, z);
-					clusters.add(mapaZerado);
-					firstChild = atual;
-					continue;
+					listaZerada.addAll(z);
+					clusters.add(listaZerada);
+					index = clusters.size() - 1;
 				}
+//				System.out.println("Inx" + index+ "x tamanho "+clusters.size());
 
 				/*
 				 * Para cada um dos proximos nodos,
 				 * verifico se é menor que os blocos
 				 * e se está no range
 				 */
-				for(int j=1; j<=nodes.size(); j++) {
-					String prox = nodes.get(j);
-					if (clusters.get(i).get(firstChild).size() <=blocks) {
-						if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(prox), suggestedRange)) {
-							clusters.get(i).get(firstChild).add(prox);
+				for(int j=0; j<nodes.size(); j++) {
+					if(j==i) {
+						continue;
+					}
+					String proximoNodo = nodes.get(j);
+					System.out.println("Comparando X com Y: "+ atual + proximoNodo);
+					if (clusters.get(index).size() <= blocks) {
+						if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo), suggestedRange)) {
+							clusters.get(index).add(proximoNodo);
 						}
-				
-//					clusters = new ArrayList<HashMap<String,List<String>>>();
-//					HashMap<String, List<String>> mapaZerado = new HashMap<String, List<String>>();
-//					List<String> z = new ArrayList<String>();
-//					z.add(atual);
-//					mapaZerado.put(atual, z);
-//					clusters.add(mapaZerado);
-//					firstChild = atual;
-				
-				/*
-				 * Se o size for maior que o block, continue
-				 */
-				
-			}
+					}
 				}
 			}
-			
-				
-			System.out.println(clusters.size());
-//			System.err.println(clusters.get(i));
-			
-//			if (clusters.) {
-//				
-//			}
-
-
-//			for (int j = 1; j <= nodes.size(); j++) {
-				
-//			}
-			
 		}
+        System.out.println(clusters.size());
+        clusters.stream().forEach(System.out::println);
 
-        System.out.println(clusters);
             System.exit(0);
 
 //            for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Proxy")).size(); i++) {
@@ -320,12 +314,13 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distance = R * c; // kms
 
-
         distance = Math.pow(distance, 2);
 
         if (Math.sqrt(distance) <= fogRange / 1000) {
+        	System.out.println("uo");
             return true;
         } else {
+        	System.out.println("xuo");
             return false;
         }
 
@@ -474,7 +469,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         final AppLoop loop1 = new AppLoop(new ArrayList<String>() {{
             add("M-SENSOR");
             add("clientModule");
-            add("processingModule");
+            add("processingModule");	
             add("clientModule");
             add("M-DISPLAY");
         }});
