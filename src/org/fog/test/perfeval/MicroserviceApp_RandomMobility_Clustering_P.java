@@ -198,7 +198,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         
         int blocks = (int) Config.AREA/nodes.size();
         double suggestedRange = Config.AREA/blocks;
-        System.err.println("Blocos: "+ blocks + "Range sugerido: "+ suggestedRange);
+        System.err.println("Blocos: "+ blocks + "\nRange sugerido: "+ suggestedRange);
         
         /*
          * Para cada um dos nodos
@@ -261,21 +261,19 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				 * e se está no range
 				 */
 				for(int j=0; j<nodes.size(); j++) {
-					if(j==i) {
-						continue;
-					}
 					String proximoNodo = nodes.get(j);
 					System.out.println("Comparando X com Y: "+ atual + proximoNodo);
-					if (clusters.get(index).size() <= blocks) {
+					if (clusters.get(index).size() < blocks) {
 						if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo), suggestedRange)) {
 							clusters.get(index).add(proximoNodo);
+							nodes.remove(j);
 						}
 					}
 				}
 			}
 		}
-        System.out.println(clusters.size());
-        clusters.stream().forEach(System.out::println);
+        System.out.println("Tamanho do cluster: "+ clusters.size());
+        clusters.stream().forEach(k->System.out.println(k.size()));
 
             System.exit(0);
 
@@ -317,10 +315,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
         distance = Math.pow(distance, 2);
 
         if (Math.sqrt(distance) <= fogRange / 1000) {
-        	System.out.println("uo");
             return true;
         } else {
-        	System.out.println("xuo");
             return false;
         }
 
