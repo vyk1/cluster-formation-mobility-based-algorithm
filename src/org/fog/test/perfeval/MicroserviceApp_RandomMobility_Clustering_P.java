@@ -2,6 +2,7 @@ package org.fog.test.perfeval;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -179,29 +181,23 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 	 */
 	private static void createFogDevices(int userId, String appId) throws NumberFormatException, IOException {
 		locator.parseResourceInfo();
-		List<String> proxies;
-		List<String> gateways;
+		List<String> proxies = new ArrayList<String>();
+		List<String> gateways = new ArrayList<String>();
+		List<String> added = new ArrayList<String>();
 
-		if (locator.getLevelWiseResources(locator.getLevelID("Cloud")).size() == 1) {
-
-			FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25,
-					MicroserviceFogDevice.CLOUD); // creates the fog device Cloud at the apex of the hierarchy with
-													// level=0
-			cloud.setParentId(References.NOT_SET);
-			locator.linkDataWithInstance(cloud.getId(),
-					locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
-			cloud.setLevel(0);
-			fogDevices.add(cloud);
-		}
 		/*
 		 * Junta todos os nodos
 		 */
-		ArrayList<String> nodes = locator.getLevelWiseResources(locator.getLevelID("Proxy"));
+		List<String> nodes = locator.getLevelWiseResources(locator.getLevelID("Proxy"));
 		nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
+//		nodes = nodes.subList(0, nodes.size()/2);		
 
-		int blocks = (int) Config.AREA / nodes.size();
-		double suggestedRange = Config.AREA / blocks;
-		System.out.println("Blocos: " + blocks + "\nRange sugerido: " + suggestedRange);
+		double metersPerCluster = Config.AREA / nodes.size();
+//		int nodesPerCluster = nodes.size()/
+//		int blocks = nodes.size()/size; 
+		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster) * 3;
+		System.out.println("Area/Nodo: " + metersPerCluster);
+		System.out.println("Range sugerido: " + suggestedRange);
 		System.out.println("Nodos: " + nodes.size());
 		System.out.printf("-----\n");
 
@@ -211,8 +207,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		for (int i = 0; i < nodes.size(); i++) {
 //        	atual: res_1
 			String atual = nodes.get(i);
-			System.err.println("Verificando para " + atual);
-			Integer index = null;
+			System.out.println("Verificando " + atual + "\n-----\n");
+			Integer responsavel = null;
 			/*
 			 * Inicializa os clusters no primeiro caso
 			 */
@@ -223,36 +219,38 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				z.add(atual);
 				listaZerada.addAll(z);
 				clusters.add(listaZerada);
-				index = 0;
-				nodes.remove(i);
+				responsavel = 0;
+				added.add(atual);
 			} else {
 				/*
 				 * Se fmv estiver vazio, procura a chave, percorrendo os clusters para achar o
 				 * FMV se fmv estiver vazio
 				 */
-				if (index == null) {
+				if (responsavel == null) {
 					for (int j = 0; j < clusters.size(); j++) {
 						HashSet<String> lista = clusters.get(j);
 						/*
 						 * Para cada lista de clusters, Verifica se existe em alguma lista com seu id
 						 */
-						if (lista.stream().allMatch(v -> v.contains(atual))) {
-							System.out.printf("Para %s está em %s\n", atual, j);
-							index = j;
-							break;
+						for (String node : lista) {
+							if (node == atual) {
+								responsavel = j;
+								break;
+							}
 						}
 					}
 				}
 				/*
 				 * Se mesmo assim não existir, o FMV É o próprio e é adicionado aos clusters
 				 */
-				if (index == null) {
+				if (responsavel == null) {
 					HashSet<String> listaZerada = new HashSet<String>();
 					List<String> z = new ArrayList<String>();
 					z.add(atual);
 					listaZerada.addAll(z);
 					clusters.add(listaZerada);
-					index = clusters.size() - 1;
+					responsavel = clusters.size() - 1;
+					added.add(atual);
 				}
 			}
 
@@ -265,18 +263,21 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				if (proximoNodo == atual) {
 					continue;
 				}
-				if (clusters.get(index).size() <= blocks) {
+				if (added.contains(proximoNodo)) {
+					continue;
+				}
+				if (clusters.get(responsavel).size() <= metersPerCluster) {
 					if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo),
 							suggestedRange)) {
-						clusters.get(index).add(proximoNodo);
-//						remove 
-							nodes.remove(proximoNodo);
+						clusters.get(responsavel).add(proximoNodo);
+						added.add(proximoNodo);
 						System.out.printf("Nodos totais %s\n", nodes.size());
 						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
 					}
 				}
 			}
-			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, index, clusters.get(index));
+			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, responsavel,
+					clusters.get(responsavel));
 		}
 		System.out.println("Total de clusters: " + clusters.size());
 		int count = 0;
@@ -286,30 +287,84 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			count += clusters.get(c).size();
 			set.addAll(clusters.get(c));
 		}
-		System.out.println(set.size());
-		System.out.println("Total de nodos atribuídos:" + count);
+//		System.out.println("Total de nodos atribuídos: " + set.size());
+//		System.out.println("Vezes de nodos atribuídos:" + count);
 
-		System.exit(0);
+		/*
+		 * Pega só os clusters que tem mais de um nodo porquê pelo menos um dos nodos
+		 * precisa ser a proxy
+		 */
+
+		ArrayList<HashSet<String>> selected = new ArrayList<HashSet<String>>();
+		for (int k = 0; k < clusters.size(); k++) {
+			if (clusters.get(k).size() > 1) {
+				selected.add(clusters.get(k));
+				Optional<String> firstOptional = clusters.get(k).stream().findFirst();
+				String first = firstOptional.get();
+				proxies.add(first);
+				clusters.get(k).remove(first);
+			}
+		}
+		System.out.println("Selected: " + selected.size());
+		System.out.println("Proxies: " + proxies.size());
+//		System.exit(0);
+
+		FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25,
+				MicroserviceFogDevice.CLOUD); // creates the fog device Cloud at the apex of the hierarchy with
+												// level=0
+		cloud.setParentId(References.NOT_SET);
+		locator.linkDataWithInstance(cloud.getId(), locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
+		cloud.setLevel(0);
+		fogDevices.add(cloud);
+		/*
+		 * o tamanho do selected vai ser sempre igual ao do proxies
+		 */
+
+		/**
+		 * O ID É A CONCATENAÇÃO DO RES COM A LINHA
+		 */
+
+		for (int k = 0; k < selected.size(); k++) {
+			String proxyId = proxies.get(k).substring(4);
+			System.out.printf("Para proxy %s\n",proxyId);
+			FogDevice proxy = createFogDevice("proxy-server_" + k, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
+					MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
+			locator.linkDataWithInstance(proxy.getId(), proxyId);
+			proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
+			proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
+			proxy.setLevel(1);
+			fogDevices.add(proxy);
+
+			/*
+			 * size menos um pq é menos a proxy
+			 */
+			for (int j = 0; j < selected.get(k).size()-1; j++) {
+				System.out.println("Para gw "+ selected.get(k).size());
+//				Object[] aux = 
+//				System.out.println(aux.length);
+//				String gatewayId = (String) aux[j];
+//				gatewayId=gatewayId.substring(4);
+//
+//				FogDevice gateway = createFogDevice("gateway_" + j + k, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
+//						MicroserviceFogDevice.FCN);
+//				locator.linkDataWithInstance(gateway.getId(), gatewayId);
+//				gateway.setParentId(proxy.getId());
+//				gateway.setUplinkLatency(4);
+//				gateway.setLevel(2);
+//				fogDevices.add(gateway);
+			}
+
+		}
 
 //            for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Proxy")).size(); i++) {
 //
-//                FogDevice proxy = createFogDevice("proxy-server_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333, MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
-//                locator.linkDataWithInstance(proxy.getId(), locator.getLevelWiseResources(locator.getLevelID("Proxy")).get(i));
-//                proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
-//                proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
-//                proxy.setLevel(1);
-//                fogDevices.add(proxy);
+
 //
 //            }
 //
 //            for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Gateway")).size(); i++) {
 //
-//                FogDevice gateway = createFogDevice("gateway_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333, MicroserviceFogDevice.FCN);
-//                locator.linkDataWithInstance(gateway.getId(), locator.getLevelWiseResources(locator.getLevelID("Gateway")).get(i));
-//                gateway.setParentId(locator.determineParent(gateway.getId(), References.SETUP_TIME));
-//                gateway.setUplinkLatency(4);
-//                gateway.setLevel(2);
-//                fogDevices.add(gateway);
+//               
 //            }
 
 	}
