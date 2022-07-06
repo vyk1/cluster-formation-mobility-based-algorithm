@@ -286,8 +286,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 //		System.out.println("Vezes de nodos atribuídos:" + count);
 
 		/*
-		 * Pega só os clusters que tem mais de um nodo 
-		 * porquê pelo menos um dos nodos
+		 * Pega só os clusters que tem mais de um nodo porquê pelo menos um dos nodos
 		 * precisa ser a proxy
 		 */
 
@@ -312,6 +311,9 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		locator.linkDataWithInstance(cloud.getId(), locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
 		cloud.setLevel(0);
 		fogDevices.add(cloud);
+		Location mapaC = locator.getCoordinates(locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
+		CSV.write(String.valueOf(mapaC.latitude), String.valueOf(mapaC.longitude), "0", "0", "-1",
+				"Datacenter");
 		/*
 		 * o tamanho do selected vai ser sempre igual ao do proxies
 		 */
@@ -326,8 +328,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			FogDevice proxy = createFogDevice("proxy-server_" + k, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
 					MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
 			Location mapa = locator.getCoordinates(proxyId);
-			System.out.println(mapa.latitude);
-//			CSV.write(mapa.latitude+ "", mapa.longitude+ "", k+"", "1", "0", "Block "+ k + "Proxy");
+			CSV.write(String.valueOf(mapa.latitude), String.valueOf(mapa.longitude), String.valueOf(k), "1", "0",
+					"Block " + k + " Proxy");
 			locator.linkDataWithInstance(proxy.getId(), proxyId);
 			proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
 			proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
@@ -338,20 +340,23 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				count1++;
 				Object[] aux = selected.get(k).toArray();
 				String gatewayId = (String) aux[j];
-				gatewayId=gatewayId.toString();
-				FogDevice gateway = createFogDevice("gateway_" + count1, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
-						MicroserviceFogDevice.FCN);
+				gatewayId = gatewayId.toString();
+				FogDevice gateway = createFogDevice("gateway_" + count1, 2800, 4000, 10000, 10000, 0.0, 107.339,
+						83.4333, MicroserviceFogDevice.FCN);
 				locator.linkDataWithInstance(gateway.getId(), gatewayId);
+				Location mapaP = locator.getCoordinates(gatewayId);
+				CSV.write(String.valueOf(mapaP.latitude), String.valueOf(mapaP.longitude), String.valueOf(k), "2", String.valueOf(k),
+						"GW "+count1);
 				gateway.setParentId(proxy.getId());
 				gateway.setUplinkLatency(4);
 				gateway.setLevel(2);
 				fogDevices.add(gateway);
 			}
 		}
-		
+
 		System.err.println(CSV.getCsv());
-//		System.exit(0);
-		
+		System.exit(0);
+
 //		for (FogDevice devices : fogDevices) {
 //			System.out.println(devices.getName() + " xx " + devices.getId());
 //		}
