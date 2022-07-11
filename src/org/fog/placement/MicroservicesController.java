@@ -402,17 +402,21 @@ public class MicroservicesController extends SimEntity {
     protected static void createClusterConnections(int levelIdentifier, List<FogDevice> fogDevices, Double clusterLatency) {
         Map<Integer, List<FogDevice>> fogDevicesByParent = new HashMap<>();
         for (FogDevice fogDevice : fogDevices) {
+//        se for do mesmo nível
             if (fogDevice.getLevel() == levelIdentifier) {
+//            	e contiver o pai, adiciona
                 if (fogDevicesByParent.containsKey(fogDevice.getParentId())) {
                     fogDevicesByParent.get(fogDevice.getParentId()).add(fogDevice);
                 } else {
+//                	e não contiver o pai, salva em outra posição do pai
                     List<FogDevice> sameParentList = new ArrayList<>();
                     sameParentList.add(fogDevice);
                     fogDevicesByParent.put(fogDevice.getParentId(), sameParentList);
                 }
             }
         }
-
+        
+// para cada um dos pais
         for (int parentId : fogDevicesByParent.keySet()) {
             List<Integer> clusterNodeIds = new ArrayList<>();
             for (FogDevice fogdevice : fogDevicesByParent.get(parentId)) {
