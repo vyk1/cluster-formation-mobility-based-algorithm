@@ -1,6 +1,9 @@
 package org.fog.test.perfeval;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -190,7 +193,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		double metersPerCluster = Config.AREA / nodes.size();
 //		int nodesPerCluster = nodes.size()/
 //		int blocks = nodes.size()/size; 
-		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster) * 3;
+		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster)*7;
 		System.out.println("Area/Nodo: " + metersPerCluster);
 		System.out.println("Range sugerido: " + suggestedRange);
 		System.out.println("Nodos: " + nodes.size());
@@ -312,8 +315,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		cloud.setLevel(0);
 		fogDevices.add(cloud);
 		Location mapaC = locator.getCoordinates(locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
-		CSV.write(String.valueOf(mapaC.latitude), String.valueOf(mapaC.longitude), "0", "0", "-1",
-				"Datacenter");
+		CSV.write(String.valueOf(mapaC.latitude), String.valueOf(mapaC.longitude), "0", "0", "-1", "Datacenter");
 		/*
 		 * o tamanho do selected vai ser sempre igual ao do proxies
 		 */
@@ -328,8 +330,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			FogDevice proxy = createFogDevice("proxy-server_" + k, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
 					MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
 			Location mapa = locator.getCoordinates(proxyId);
-			CSV.write(String.valueOf(mapa.latitude), String.valueOf(mapa.longitude), String.valueOf(k+1), "1", "0",
-					"Block " + (k+1) + " Proxy");
+			CSV.write(String.valueOf(mapa.latitude), String.valueOf(mapa.longitude), String.valueOf(k + 1), "1", "0",
+					"Block " + (k + 1) + " Proxy");
 			locator.linkDataWithInstance(proxy.getId(), proxyId);
 			proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
 			proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
@@ -345,8 +347,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 						83.4333, MicroserviceFogDevice.FCN);
 				locator.linkDataWithInstance(gateway.getId(), gatewayId);
 				Location mapaP = locator.getCoordinates(gatewayId);
-				CSV.write(String.valueOf(mapaP.latitude), String.valueOf(mapaP.longitude), String.valueOf(k+1), "2", String.valueOf(k+1),
-						"GW "+count1);
+				CSV.write(String.valueOf(mapaP.latitude), String.valueOf(mapaP.longitude), String.valueOf(k + 1), "2",
+						String.valueOf(k + 1), "GW " + count1);
 				gateway.setParentId(proxy.getId());
 				gateway.setUplinkLatency(4);
 				gateway.setLevel(2);
@@ -354,12 +356,19 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			}
 		}
 
-		System.err.println(CSV.getCsv());
-		System.exit(0);
+		try (PrintWriter writer = new PrintWriter(
+				new File(String.format(".%sdataset%sedgeResources-melbCBD.csv", File.separator, File.separator)))) {
+			StringBuilder csv = CSV.getCsv();
+			writer.write(csv.toString());
+			csv.setLength(0);
+			writer.close();
+			System.out.println("Overwritten!");
 
-//		for (FogDevice devices : fogDevices) {
-//			System.out.println(devices.getName() + " xx " + devices.getId());
-//		}
+		} catch (FileNotFoundException e) {
+			System.out.println(e.getMessage());
+		}
+
+		System.exit(0);
 
 	}
 
