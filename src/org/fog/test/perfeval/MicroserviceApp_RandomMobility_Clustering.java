@@ -58,7 +58,7 @@ public class MicroserviceApp_RandomMobility_Clustering {
     static LocationHandler locator;
 
     static double SENSOR_TRANSMISSION_TIME = 10;
-    static int numberOfMobileUser = 1;
+    static int numberOfMobileUser = 5;
 
     // if random mobility generator for users is True, new random dataset will be created for each user
     static boolean randomMobility_generator = false; // To use random datasets
@@ -175,6 +175,7 @@ public class MicroserviceApp_RandomMobility_Clustering {
             fogDevices.add(cloud);
 
             for (int i = 0; i < locator.getLevelWiseResources(locator.getLevelID("Proxy")).size(); i++) {
+            	
 
                 FogDevice proxy = createFogDevice("proxy-server_" + i, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333, MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
                 locator.linkDataWithInstance(proxy.getId(), locator.getLevelWiseResources(locator.getLevelID("Proxy")).get(i));
