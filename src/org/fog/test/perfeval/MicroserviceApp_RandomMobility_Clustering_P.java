@@ -275,10 +275,10 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 					clusters.get(responsavel));
 		}
 		System.out.println("Total de clusters: " + clusters.size());
-		var count = 0;
+		int count = 0;
 		Set<String> set = new HashSet<String>();
 		for (int c = 0; c < clusters.size(); c++) {
-			System.out.printf("%s \n", clusters.get(c));
+//			System.out.printf("%s \n", clusters.get(c));
 			count += clusters.get(c).size();
 			set.addAll(clusters.get(c));
 		}
@@ -328,8 +328,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			FogDevice proxy = createFogDevice("proxy-server_" + k, 2800, 4000, 10000, 10000, 0.0, 107.339, 83.4333,
 					MicroserviceFogDevice.FON); // creates the fog device Proxy Server (level=1)
 			Location mapa = locator.getCoordinates(proxyId);
-			CSV.write(String.valueOf(mapa.latitude), String.valueOf(mapa.longitude), String.valueOf(k), "1", "0",
-					"Block " + k + " Proxy");
+			CSV.write(String.valueOf(mapa.latitude), String.valueOf(mapa.longitude), String.valueOf(k+1), "1", "0",
+					"Block " + (k+1) + " Proxy");
 			locator.linkDataWithInstance(proxy.getId(), proxyId);
 			proxy.setParentId(cloud.getId()); // setting Cloud as parent of the Proxy Server
 			proxy.setUplinkLatency(100); // latency of connection from Proxy Server to the Cloud is 100 ms
@@ -345,7 +345,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 						83.4333, MicroserviceFogDevice.FCN);
 				locator.linkDataWithInstance(gateway.getId(), gatewayId);
 				Location mapaP = locator.getCoordinates(gatewayId);
-				CSV.write(String.valueOf(mapaP.latitude), String.valueOf(mapaP.longitude), String.valueOf(k), "2", String.valueOf(k),
+				CSV.write(String.valueOf(mapaP.latitude), String.valueOf(mapaP.longitude), String.valueOf(k+1), "2", String.valueOf(k+1),
 						"GW "+count1);
 				gateway.setParentId(proxy.getId());
 				gateway.setUplinkLatency(4);
