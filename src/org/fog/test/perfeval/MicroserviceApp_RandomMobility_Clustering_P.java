@@ -193,7 +193,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		double metersPerCluster = Config.AREA / nodes.size();
 //		int nodesPerCluster = nodes.size()/
 //		int blocks = nodes.size()/size; 
-		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster)*7;
+		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster);
 		System.out.println("Area/Nodo: " + metersPerCluster);
 		System.out.println("Range sugerido: " + suggestedRange);
 		System.out.println("Nodos: " + nodes.size());
@@ -205,7 +205,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		for (int i = 0; i < nodes.size(); i++) {
 //        	atual: res_1
 			String atual = nodes.get(i);
-			System.out.println("Verificando " + atual + "\n-----\n");
+//			System.out.println("Verificando " + atual + "\n-----\n");
 			Integer responsavel = null;
 			/*
 			 * Inicializa os clusters no primeiro caso
@@ -269,15 +269,15 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 							suggestedRange)) {
 						clusters.get(responsavel).add(proximoNodo);
 						added.add(proximoNodo);
-						System.out.printf("Nodos totais %s\n", nodes.size());
-						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
+//						System.out.printf("Nodos totais %s\n", nodes.size());
+//						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
 					}
 				}
 			}
-			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, responsavel,
-					clusters.get(responsavel));
+//			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, responsavel,
+//					clusters.get(responsavel));
 		}
-		System.out.println("Total de clusters: " + clusters.size());
+//		System.out.println("Total de clusters: " + clusters.size());
 		int count = 0;
 		Set<String> set = new HashSet<String>();
 		for (int c = 0; c < clusters.size(); c++) {
