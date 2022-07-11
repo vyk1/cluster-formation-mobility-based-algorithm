@@ -133,6 +133,10 @@ public class ControllerComponent {
     public void addMonitoredDevice(FogDevice fogDevice) {
         this.fogDeviceList.add(fogDevice);
     }
+    
+    public int printFogDevices() {
+    	return fogDeviceList.size();
+    }
 
 
 }

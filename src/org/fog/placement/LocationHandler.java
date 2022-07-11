@@ -92,9 +92,9 @@ public class LocationHandler {
 			double minmumDistance = Config.MAX_VALUE;
 			for(int i=0; i<getLevelWiseResources(parentLevel).size();i++){
 				Location potentialParentLoc = getResourceLocationInfo(getLevelWiseResources(parentLevel).get(i));
-				System.out.println(resourceLoc.block);
-				System.out.println(potentialParentLoc.block);
-				System.out.printf("%s\n",getLevelWiseResources(parentLevel).get(i));
+//				System.out.println(resourceLoc.block);
+//				System.out.println(potentialParentLoc.block);
+//				System.out.printf("%s\n",getLevelWiseResources(parentLevel).get(i));
 				double distance = calculateDistance(resourceLoc, potentialParentLoc);
 					if(distance<minmumDistance){
 						parentDataId = getLevelWiseResources(parentLevel).get(i);

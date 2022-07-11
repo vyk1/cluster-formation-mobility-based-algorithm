@@ -98,11 +98,11 @@ public class ShortestPathRoutingGenerator {
             }
         }
 
-        System.out.println("Routing Table : ");
-        for (String deviceName : routingString.keySet()) {
-            System.out.println(deviceName + " : " + routingString.get(deviceName).toString());
-        }
-        System.out.println("\n");
+//        System.out.println("Routing Table : ");
+//        for (String deviceName : routingString.keySet()) {
+//            System.out.println(deviceName + " : " + routingString.get(deviceName).toString());
+//        }
+//        System.out.println("\n");
 
         return routing;
     }
