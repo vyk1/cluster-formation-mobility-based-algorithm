@@ -2,7 +2,7 @@ package org.fog.test.perfeval;
 
 public class CSV {
 
-	public static StringBuilder csv = new StringBuilder();
+	public static StringBuilder csv = new StringBuilder().append("ID,Latitude,Longitude,Block,Level,Parent,State,Details\n");
 	private static int id = 0;
 
 	public static void write(String lat, String lon, String block, String level, String parent, String details) {
