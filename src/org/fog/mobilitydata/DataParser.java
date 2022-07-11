@@ -101,7 +101,7 @@ public class DataParser {
 			resouresOnLevels[i] = new ArrayList<String>();
 
 		BufferedReader csvReader = new BufferedReader(
-				new FileReader(String.format(".%sdataset%sedgeResources-melbCBD.csv", File.separator, File.separator)));
+				new FileReader(String.format(".%sdataset%sedgeResources-melbCBD-source.csv", File.separator, File.separator)));
 		String row;
 		while ((row = csvReader.readLine()) != null) {
 			String[] data = row.split(",");
