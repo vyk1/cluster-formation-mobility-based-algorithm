@@ -15,9 +15,14 @@ import org.fog.mobilitydata.References;
 import org.fog.utils.Config;
 import org.fog.utils.FogEvents;
 import org.fog.utils.MigrationDelayMonitor;
+import org.fog.utils.TimeKeeper;
 import org.json.simple.JSONObject;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +37,7 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 	private Map<Integer, Integer> parentReference;
 
 	protected Map<Integer, Map<String, PlacementRequest>> perClientDevicePrs = new HashMap<>(); // clientDevice ->
-																								// <Application -> PR>
+	StringBuilder str = new StringBuilder();																								// <Application -> PR>
 
 	/**
 	 * @param name
@@ -104,6 +109,13 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 //			printCostDetails();
 			printNetworkUsageDetails();
 			printMigrationDelayDetails();
+			
+			try {
+				printData();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 //			for (FogDevice f : fogDevices) {
 //				if (f.getLevel() == 1) {
 //					System.out.printf("FON %s - conectados %d\n", f.getName(), f.getConnectedDevices());
@@ -116,8 +128,57 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 			break;
 		}
 	}
+	
+	@Override
+	protected void printTimeDetails() {
+		System.out.println("=========================================");
+		System.out.println("============== RESULTS ==================");
+		System.out.println("=========================================");
+		System.out.println("EXECUTION TIME : "+ (Calendar.getInstance().getTimeInMillis() - TimeKeeper.getInstance().getSimulationStartTime()));
+//		str.append(Calendar.getInstance().getTimeInMillis() - TimeKeeper.getInstance().getSimulationStartTime());
+//        str.append(";");
+		System.out.println("=========================================");
+		System.out.println("APPLICATION LOOP DELAYS");
+		System.out.println("=========================================");
+		for(Integer loopId : TimeKeeper.getInstance().getLoopIdToTupleIds().keySet()){
+			/*double average = 0, count = 0;
+			for(int tupleId : TimeKeeper.getInstance().getLoopIdToTupleIds().get(loopId)){
+				Double startTime = 	TimeKeeper.getInstance().getEmitTimes().get(tupleId);
+				Double endTime = 	TimeKeeper.getInstance().getEndTimes().get(tupleId);
+				if(startTime == null || endTime == null)
+					break;
+				average += endTime-startTime;
+				count += 1;
+			}
+			System.out.println(getStringForLoopId(loopId) + " ---> "+(average/count));*/
+			str.append(TimeKeeper.getInstance().getLoopIdToCurrentAverage().get(loopId));
+        	str.append(";");
+			System.out.println(getStringForLoopId(loopId) + " ---> "+TimeKeeper.getInstance().getLoopIdToCurrentAverage().get(loopId));
+		}
+//		System.out.println("=========================================");
+//		System.out.println("TUPLE CPU EXECUTION DELAY");
+//		System.out.println("=========================================");
+//		
+//		for(String tupleType : TimeKeeper.getInstance().getTupleTypeToAverageCpuTime().keySet()){
+//			str.append(TimeKeeper.getInstance().getTupleTypeToAverageCpuTime().get(tupleType));
+//        	str.append(";");
+//        	System.out.println(tupleType + " ---> "+TimeKeeper.getInstance().getTupleTypeToAverageCpuTime().get(tupleType));
+//		}
+//		
+//		System.out.println("=========================================");
+	}
+	
+	public void printData() throws IOException {
+		FileWriter pw = new FileWriter(References.output_path_data, true);
+		str.append("\n");
+
+		pw.append(str.toString());
+		pw.flush();
+		pw.close();
+	}
 
 	private void printMigrationDelayDetails() {
+    	str.append(MigrationDelayMonitor.getMigrationDelay());
 		System.out.println("Total time required for module migration = " + MigrationDelayMonitor.getMigrationDelay());
 	}
 
