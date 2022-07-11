@@ -190,12 +190,14 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
 //		nodes = nodes.subList(0, nodes.size()/2);		
 
-		double metersPerCluster = Config.AREA / nodes.size();
+		double metersPerNode = Config.AREA / nodes.size();
 //		int nodesPerCluster = nodes.size()/
 //		int blocks = nodes.size()/size; 
-		double suggestedRange = Math.ceil(Config.AREA / metersPerCluster);
-		System.out.println("Area/Nodo: " + metersPerCluster);
+		double suggestedRange = Math.ceil(Config.AREA / metersPerNode);
+		double maxC = Math.ceil(nodes.size() / metersPerNode);
+		System.out.println("Area/Nodo: " + metersPerNode);
 		System.out.println("Range sugerido: " + suggestedRange);
+		System.out.println("Total nodos/Range de nodo: " + maxC);
 		System.out.println("Nodos: " + nodes.size());
 		System.out.printf("-----\n");
 
@@ -261,10 +263,12 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				if (proximoNodo == atual) {
 					continue;
 				}
+				
 				if (added.contains(proximoNodo)) {
 					continue;
 				}
-				if (clusters.get(responsavel).size() <= metersPerCluster) {
+				
+				if (clusters.get(responsavel).size() <= maxC) {
 					if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo),
 							suggestedRange)) {
 						clusters.get(responsavel).add(proximoNodo);
@@ -272,6 +276,9 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 //						System.out.printf("Nodos totais %s\n", nodes.size());
 //						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
 					}
+				}else {
+					// cria
+
 				}
 			}
 //			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, responsavel,
@@ -285,8 +292,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			count += clusters.get(c).size();
 			set.addAll(clusters.get(c));
 		}
-//		System.out.println("Total de nodos atribuídos: " + set.size());
-//		System.out.println("Vezes de nodos atribuídos:" + count);
+		System.out.println("Total de nodos atribuídos: " + set.size());
+		System.out.println("Vezes de nodos atribuídos:" + count);
 
 		/*
 		 * Pega só os clusters que tem mais de um nodo porquê pelo menos um dos nodos
@@ -357,7 +364,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		}
 
 		try (PrintWriter writer = new PrintWriter(
-				new File(String.format(".%sdataset%sedgeResources-melbCBD.csv", File.separator, File.separator)))) {
+				new File(String.format(".%sdataset%sedgeResources-melbCBD-new.csv", File.separator, File.separator)))) {
 			StringBuilder csv = CSV.getCsv();
 			writer.write(csv.toString());
 			csv.setLength(0);
