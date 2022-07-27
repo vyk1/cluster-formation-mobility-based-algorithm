@@ -33,7 +33,6 @@ import org.fog.entities.FogBroker;
 import org.fog.entities.FogDevice;
 import org.fog.entities.FogDeviceCharacteristics;
 import org.fog.entities.MicroserviceFogDevice;
-import org.fog.entities.PlacementRequest;
 import org.fog.entities.Sensor;
 import org.fog.entities.Tuple;
 import org.fog.mobilitydata.DataParser;
@@ -41,14 +40,11 @@ import org.fog.mobilitydata.Location;
 import org.fog.mobilitydata.RandomMobilityGenerator;
 import org.fog.mobilitydata.References;
 import org.fog.placement.LocationHandler;
-import org.fog.placement.MicroservicesMobilityClusteringController;
-import org.fog.placement.PlacementLogicFactory;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
 import org.fog.utils.Config;
 import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogUtils;
-import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 import org.json.simple.parser.ParseException;
 
@@ -66,7 +62,7 @@ import org.json.simple.parser.ParseException;
  * ENABLE_RESOURCE_DATA_SHARING -> false (not needed as FONs placed at the
  * highest level.
  */
-public class MicroserviceApp_RandomMobility_Clustering_P {
+public class GeoClusterGen {
 	static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
 	static List<Sensor> sensors = new ArrayList<Sensor>();
 	static List<Actuator> actuators = new ArrayList<Actuator>();
@@ -124,40 +120,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			 */
 			createMobileUser(broker.getId(), applications.get(0).getAppId(), datasetReference);
 			createFogDevices(broker.getId(), applications.get(0).getAppId());
+			Log.printLine("Clusters generated. Check README.md for further details.");
 
-			/**
-			 * Central controller for performing preprocessing functions
-			 */
-			List<Application> appList = new ArrayList<>();
-			for (Application application : applications)
-				appList.add(application);
-
-			List<Integer> clusterLevelIdentifier = new ArrayList<>();
-			clusterLevelIdentifier.add(2);
-
-			int placementAlgo = PlacementLogicFactory.CLUSTERED_MICROSERVICES_PLACEMENT;
-			MicroservicesMobilityClusteringController microservicesController = new MicroservicesMobilityClusteringController(
-					"controller", fogDevices, sensors, appList, clusterLevelIdentifier, 2.0, placementAlgo, locator);
-
-			// generate placement requests
-			List<PlacementRequest> placementRequests = new ArrayList<>();
-			for (Sensor s : sensors) {
-				Map<String, Integer> placedMicroservicesMap = new HashMap<>();
-				placedMicroservicesMap.put("clientModule", s.getGatewayDeviceId());
-				PlacementRequest p = new PlacementRequest(s.getAppId(), s.getId(), s.getGatewayDeviceId(),
-						placedMicroservicesMap);
-				placementRequests.add(p);
-			}
-
-			microservicesController.submitPlacementRequests(placementRequests, 0);
-
-			TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
-
-			CloudSim.startSimulation();
-
-			CloudSim.stopSimulation();
-
-			Log.printLine("VRGame finished!");
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.printLine("Unwanted errors happen");
@@ -189,18 +153,23 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		 */
 		List<String> nodes = locator.getLevelWiseResources(locator.getLevelID("Proxy"));
 		nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
-//		nodes = nodes.subList(0, nodes.size()/2);		
 
 		double metersPerNode = Config.AREA / nodes.size();
 //		int nodesPerCluster = nodes.size()/
 //		int blocks = nodes.size()/size; 
 		double suggestedRange = Math.ceil(Config.AREA / metersPerNode);
 		double maxC = Math.ceil(nodes.size() / metersPerNode);
-		System.out.println("Area/Nodo: " + metersPerNode);
-		System.out.println("Range sugerido: " + suggestedRange);
-		System.out.println("Total nodos/Range de nodo: " + maxC);
-		System.out.println("Nodos: " + nodes.size());
+		System.out.println("Area/node: " + metersPerNode);
+		System.out.println("Suggested range: " + suggestedRange);
+		System.out.println("Total nodes: " + nodes.size());
+		System.out.println("Total nodes/Range per node: " + maxC);
 		System.out.printf("-----\n");
+
+//		double switchVar = metersPerNode;
+//		metersPerNode = suggestedRange;
+//		suggestedRange = switchVar;
+//		
+//		maxC = Math.ceil(nodes.size() / metersPerNode);
 
 		/*
 		 * Para cada um dos nodos
@@ -293,8 +262,8 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			count += clusters.get(c).size();
 			set.addAll(clusters.get(c));
 		}
-		System.out.println("Total de nodos atribuídos: " + set.size());
-		System.out.println("Vezes de nodos atribuídos:" + count);
+		System.out.println("Number of assigned nodes: " + set.size());
+		System.out.println("Times nodes were assigned:" + count);
 
 		/*
 		 * Pega só os clusters que tem mais de um nodo porquê pelo menos um dos nodos
@@ -313,7 +282,6 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		}
 		System.out.println("Selected: " + selected.size());
 		System.out.println("Proxies: " + proxies.size());
-//		System.exit(0);
 
 		FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0.01, 16 * 103, 16 * 83.25,
 				MicroserviceFogDevice.CLOUD); // creates the fog device Cloud at the apex of the hierarchy with
@@ -374,16 +342,15 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		try (PrintWriter writer = new PrintWriter(new File(
 				String.format(".%sdataset%sedgeResources-%s.csv", File.separator, File.separator, customTimestamp)))) {
 			StringBuilder csv = CSV.getCsv();
-			writer.write(csv.toString());
+			writer.print(csv.toString());
 			csv.setLength(0);
 			writer.close();
+			System.out.println("-----");
 			System.out.println("Written as edgeResources-" + customTimestamp + ".csv");
 
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
-
-		System.exit(0);
 
 	}
 
@@ -432,19 +399,6 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 
 	}
 
-	/**
-	 * Creates a vanilla fog device
-	 *
-	 * @param nodeName    name of the device to be used in simulation
-	 * @param mips        MIPS
-	 * @param ram         RAM
-	 * @param upBw        uplink bandwidth
-	 * @param downBw      downlink bandwidth
-	 * @param ratePerMips cost rate per MIPS used
-	 * @param busyPower
-	 * @param idlePower
-	 * @return
-	 */
 	private static MicroserviceFogDevice createFogDevice(String nodeName, long mips, int ram, long upBw, long downBw,
 			double ratePerMips, double busyPower, double idlePower, String deviceType) {
 
