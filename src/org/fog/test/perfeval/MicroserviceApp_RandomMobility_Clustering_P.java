@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -263,11 +264,11 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 				if (proximoNodo == atual) {
 					continue;
 				}
-				
+
 				if (added.contains(proximoNodo)) {
 					continue;
 				}
-				
+
 				if (clusters.get(responsavel).size() <= maxC) {
 					if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo),
 							suggestedRange)) {
@@ -276,7 +277,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 //						System.out.printf("Nodos totais %s\n", nodes.size());
 //						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
 					}
-				}else {
+				} else {
 					// cria
 
 				}
@@ -363,13 +364,20 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 			}
 		}
 
-		try (PrintWriter writer = new PrintWriter(
-				new File(String.format(".%sdataset%sedgeResources-melbCBD-new.csv", File.separator, File.separator)))) {
+		Date date = new Date();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+
+		String customTimestamp = String.valueOf(cal.get(Calendar.MONTH)) + "_"
+				+ String.valueOf(cal.get(Calendar.DAY_OF_MONTH + 1)) + "_" + String.valueOf(cal.get(Calendar.YEAR))
+				+ "_" + String.valueOf(cal.getTimeInMillis());
+		try (PrintWriter writer = new PrintWriter(new File(
+				String.format(".%sdataset%sedgeResources-%s.csv", File.separator, File.separator, customTimestamp)))) {
 			StringBuilder csv = CSV.getCsv();
 			writer.write(csv.toString());
 			csv.setLength(0);
 			writer.close();
-			System.out.println("Overwritten!");
+			System.out.println("Written as edgeResources-" + customTimestamp + ".csv");
 
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());

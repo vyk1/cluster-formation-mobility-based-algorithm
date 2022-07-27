@@ -172,7 +172,7 @@ public class MicroservicesMobilityClusteringController extends MicroservicesCont
 		FileWriter pw = new FileWriter(References.output_path_data, true);
 		str.append("\n");
 
-		pw.append(str.toString());
+		pw.append(str.toString().replace(".", ","));
 		pw.flush();
 		pw.close();
 	}
