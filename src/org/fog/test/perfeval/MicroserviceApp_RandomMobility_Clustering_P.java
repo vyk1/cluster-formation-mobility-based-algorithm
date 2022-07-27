@@ -369,7 +369,7 @@ public class MicroserviceApp_RandomMobility_Clustering_P {
 		cal.setTime(date);
 
 		String customTimestamp = String.valueOf(cal.get(Calendar.MONTH)) + "_"
-				+ String.valueOf(cal.get(Calendar.DAY_OF_MONTH + 1)) + "_" + String.valueOf(cal.get(Calendar.YEAR))
+				+ String.valueOf(cal.get(Calendar.DAY_OF_MONTH) + 1) + "_" + String.valueOf(cal.get(Calendar.YEAR))
 				+ "_" + String.valueOf(cal.getTimeInMillis());
 		try (PrintWriter writer = new PrintWriter(new File(
 				String.format(".%sdataset%sedgeResources-%s.csv", File.separator, File.separator, customTimestamp)))) {
