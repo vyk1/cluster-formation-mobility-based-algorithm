@@ -17,16 +17,12 @@ public class References {
 	public static final double long_reference = 144.952370512958;
 
 	// Reference dataset filename to store and retrieve users positions
-	// String.format(".%sdataset%susersLocation-melbCBD_", File.separator,
-	// File.separator);
-	// String.format(".%sdataset%susersLocation-melbCBD-random_, File.separator,
-	// File.separator);
-	public static final String dataset_reference = String.format(".%sdataset%susersLocation-melbCBD_", File.separator,
-			File.separator);
+	public static final String dataset_reference = String.format(".%sdataset%slogical%susersLocation-melbCBD_",
+			File.separator, File.separator, File.separator);
 	public static final String output_path_data = String.format(".%sdataset%soutput_data.csv", File.separator,
 			File.separator);
-	public static final String dataset_random = String.format(".%sdataset%srandom_usersLocation-melbCBD_",
-			File.separator, File.separator);
+	public static final String dataset_random = String.format(".%sdataset%srandom%srandom_usersLocation-melbCBD_",
+			File.separator, File.separator, File.separator);
 	public static final int random_walk_mobility_model = 1;
 	public static final int random_waypoint_mobility_model = 2;
 	public static double MinMobilitySpeed = 1; //
