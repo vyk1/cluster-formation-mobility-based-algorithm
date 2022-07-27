@@ -100,14 +100,13 @@ public class DataParser {
 		for (int i = 0; i < numOfLevels; i++)
 			resouresOnLevels[i] = new ArrayList<String>();
 
-		BufferedReader csvReader = new BufferedReader(
-				new FileReader(String.format(".%sdataset%sedgeResources-melbCBD-source.csv", File.separator, File.separator)));
+//			path to the preferred edgeResources csv
+		BufferedReader csvReader = new BufferedReader(new FileReader(
+				String.format(".%sdataset%sedgeResources-melbCBD-new.csv", File.separator, File.separator)));
 		String row;
 		while ((row = csvReader.readLine()) != null) {
 			String[] data = row.split(",");
-			// System.out.println(row);
 			if (data[6].equals("VIC")) {
-				// System.out.println(row);
 				Location rl = new Location(Double.parseDouble(data[1]), Double.parseDouble(data[2]),
 						Integer.parseInt(data[3]));
 				resouresOnLevels[Integer.parseInt(data[4])].add("res_" + data[0]);
