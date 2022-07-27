@@ -1,1 +1,2 @@
-# clustering-ips
+# Clustering algorithm
+
