@@ -21,7 +21,7 @@ public class References {
 			File.separator, File.separator, File.separator);
 	public static final String output_path_data = String.format(".%sdataset%soutput_data.csv", File.separator,
 			File.separator);
-	public static final String dataset_random = String.format(".%sdataset%srandom%srandom_usersLocation-melbCBD_",
+	public static final String dataset_random = String.format(".%sdataset%srandomic%srandom_usersLocation-melbCBD_",
 			File.separator, File.separator, File.separator);
 	public static final int random_walk_mobility_model = 1;
 	public static final int random_waypoint_mobility_model = 2;
