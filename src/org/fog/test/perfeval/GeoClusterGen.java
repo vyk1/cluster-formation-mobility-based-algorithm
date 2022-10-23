@@ -145,8 +145,6 @@ public class GeoClusterGen {
 		nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
 
 		double metersPerNode = Config.AREA / nodes.size();
-//		int nodesPerCluster = nodes.size()/
-//		int blocks = nodes.size()/size; 
 		double suggestedRange = Math.ceil(Config.AREA / metersPerNode);
 		double maxC = Math.ceil(nodes.size() / metersPerNode);
 		System.out.println("Area/node: " + metersPerNode);
@@ -165,37 +163,37 @@ public class GeoClusterGen {
 		 * Foreach of them
 		 */
 		for (int i = 0; i < nodes.size(); i++) {
-			String atual = nodes.get(i);
-			Integer responsavel = null;
+			String current = nodes.get(i);
+			Integer responsable = null;
 			/*
 			 * Initializes the clusters for the first case
 			 */
 			if (clusters == null) {
 				clusters = new ArrayList<HashSet<String>>();
-				HashSet<String> listaZerada = new HashSet<String>();
+				HashSet<String> newList = new HashSet<String>();
 				List<String> z = new ArrayList<String>();
-				z.add(atual);
-				listaZerada.addAll(z);
-				clusters.add(listaZerada);
-				responsavel = 0;
-				added.add(atual);
+				z.add(current);
+				newList.addAll(z);
+				clusters.add(newList);
+				responsable = 0;
+				added.add(current);
 			} else {
 				/*
 				 * If responsable is empty
 				 */
-				if (responsavel == null) {
+				if (responsable == null) {
 					/*
 					   Iterates each cluster 
 					 */
 					for (int j = 0; j < clusters.size(); j++) {
-						HashSet<String> lista = clusters.get(j);
+						HashSet<String> list = clusters.get(j);
 						/*
 						   As they are in a group, checks if there is any cluster with the current node id 
 						   and returns the responsable of the cluster (proxy)
 						 */
-						for (String node : lista) {
-							if (node == atual) {
-								responsavel = j;
+						for (String node : list) {
+							if (node == current) {
+								responsable = j;
 								break;
 							}
 						}
@@ -205,14 +203,14 @@ public class GeoClusterGen {
 				   If still, there is no responsable, the current node is a proxy (responsable) node
 				   and it is added to the clusters array
 				 */
-				if (responsavel == null) {
-					HashSet<String> listaZerada = new HashSet<String>();
+				if (responsable == null) {
+					HashSet<String> newList = new HashSet<String>();
 					List<String> z = new ArrayList<String>();
-					z.add(atual);
-					listaZerada.addAll(z);
-					clusters.add(listaZerada);
-					responsavel = clusters.size() - 1;
-					added.add(atual);
+					z.add(current);
+					newList.addAll(z);
+					clusters.add(newList);
+					responsable = clusters.size() - 1;
+					added.add(current);
 				}
 			}
 
@@ -221,27 +219,27 @@ public class GeoClusterGen {
 			  and if the node is within the Euclidian Distance (range - ANR)
 			 */
 			for (int j = 0; j < nodes.size(); j++) {
-				String proximoNodo = nodes.get(j);
-				if (proximoNodo == atual) {
+				String nextNode = nodes.get(j);
+				if (nextNode == current) {
 					continue;
 				}
 
-				if (added.contains(proximoNodo)) {
+				if (added.contains(nextNode)) {
 					continue;
 				}
 
-				if (clusters.get(responsavel).size() <= maxC) {
-					if (calculateInRange(locator.getCoordinates(atual), locator.getCoordinates(proximoNodo),
+				if (clusters.get(responsable).size() <= maxC) {
+					if (calculateInRange(locator.getCoordinates(current), locator.getCoordinates(nextNode),
 							suggestedRange)) {
-						clusters.get(responsavel).add(proximoNodo);
-						added.add(proximoNodo);
+						clusters.get(responsable).add(nextNode);
+						added.add(nextNode);
 //						System.out.printf("Total node %s\n", nodes.size());
-//						System.out.println("Removed index " + j + " with value " + proximoNodo);
+//						System.out.println("Removed index " + j + " with value " + nextNode);
 					}
 				} 
 			}
-//			System.out.printf("The responsable node of %s is %s that has %s nodes\n", atual, responsavel,
-//					clusters.get(responsavel));
+//			System.out.printf("The responsable node of %s is %s that has %s nodes\n", current, responsable,
+//					clusters.get(responsable));
 		}
 //		System.out.println("Total clusters: " + clusters.size());
 		int count = 0;
