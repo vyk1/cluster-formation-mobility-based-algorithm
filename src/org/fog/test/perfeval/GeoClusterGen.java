@@ -164,7 +164,7 @@ public class GeoClusterGen {
 		 */
 		for (int i = 0; i < nodes.size(); i++) {
 			String current = nodes.get(i);
-			Integer responsable = null;
+			Integer responsible = null;
 			/*
 			 * Initializes the clusters for the first case
 			 */
@@ -175,13 +175,13 @@ public class GeoClusterGen {
 				z.add(current);
 				newList.addAll(z);
 				clusters.add(newList);
-				responsable = 0;
+				responsible = 0;
 				added.add(current);
 			} else {
 				/*
-				 * If responsable is empty
+				 * If responsible is empty
 				 */
-				if (responsable == null) {
+				if (responsible == null) {
 					/*
 					   Iterates each cluster 
 					 */
@@ -189,27 +189,27 @@ public class GeoClusterGen {
 						HashSet<String> list = clusters.get(j);
 						/*
 						   As they are in a group, checks if there is any cluster with the current node id 
-						   and returns the responsable of the cluster (proxy)
+						   and returns the responsible of the cluster (proxy)
 						 */
 						for (String node : list) {
 							if (node == current) {
-								responsable = j;
+								responsible = j;
 								break;
 							}
 						}
 					}
 				}
 				/*
-				   If still, there is no responsable, the current node is a proxy (responsable) node
+				   If still, there is no responsible, the current node is a proxy (responsible) node
 				   and it is added to the clusters array
 				 */
-				if (responsable == null) {
+				if (responsible == null) {
 					HashSet<String> newList = new HashSet<String>();
 					List<String> z = new ArrayList<String>();
 					z.add(current);
 					newList.addAll(z);
 					clusters.add(newList);
-					responsable = clusters.size() - 1;
+					responsible = clusters.size() - 1;
 					added.add(current);
 				}
 			}
@@ -228,18 +228,18 @@ public class GeoClusterGen {
 					continue;
 				}
 
-				if (clusters.get(responsable).size() <= maxC) {
+				if (clusters.get(responsible).size() <= maxC) {
 					if (calculateInRange(locator.getCoordinates(current), locator.getCoordinates(nextNode),
 							suggestedRange)) {
-						clusters.get(responsable).add(nextNode);
+						clusters.get(responsible).add(nextNode);
 						added.add(nextNode);
 //						System.out.printf("Total node %s\n", nodes.size());
 //						System.out.println("Removed index " + j + " with value " + nextNode);
 					}
 				} 
 			}
-//			System.out.printf("The responsable node of %s is %s that has %s nodes\n", current, responsable,
-//					clusters.get(responsable));
+//			System.out.printf("The responsible node of %s is %s that has %s nodes\n", current, responsible,
+//					clusters.get(responsible));
 		}
 //		System.out.println("Total clusters: " + clusters.size());
 		int count = 0;
