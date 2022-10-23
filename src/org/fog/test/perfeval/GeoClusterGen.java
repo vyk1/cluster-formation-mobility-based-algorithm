@@ -49,19 +49,13 @@ import org.fog.utils.distribution.DeterministicDistribution;
 import org.json.simple.parser.ParseException;
 
 /**
- * Simulation setup for Microservices Application
- * This test covers featured such as,
+ * Setup for Cluster Generation
  * 1. creation of clusters among fog nodes using dynamic clustering
  * 2. mobility of end user devices and microservice migration
  *
- * @author Samodha Pallewatta
+ * @author Victoria Botelho Martins (https://github.com/vyk1/)
  */
 
-/**
- * Config properties SIMULATION_MODE -> static PR_PROCESSING_MODE -> PERIODIC
- * ENABLE_RESOURCE_DATA_SHARING -> false (not needed as FONs placed at the
- * highest level.
- */
 public class GeoClusterGen {
 	static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
 	static List<Sensor> sensors = new ArrayList<Sensor>();
@@ -88,18 +82,14 @@ public class GeoClusterGen {
 		try {
 
 			Log.disable();
-			int num_user = 1; // number of cloud users
+			int num_user = 1; 
 			Calendar calendar = Calendar.getInstance();
-			boolean trace_flag = false; // mean trace events
+			boolean trace_flag = false; 
 
 			CloudSim.init(num_user, calendar, trace_flag);
 
 			FogBroker broker = new FogBroker("broker");
 
-			/**
-			 * Microservices-based application creation - a single application is selected
-			 * for this
-			 */
 			Application microservicesApplication = createApplication("example", broker.getId());
 			applications.add(microservicesApplication);
 
@@ -149,7 +139,7 @@ public class GeoClusterGen {
 		List<String> added = new ArrayList<String>();
 
 		/*
-		 * Junta todos os nodos
+		 * Gathers all nodes
 		 */
 		List<String> nodes = locator.getLevelWiseResources(locator.getLevelID("Proxy"));
 		nodes.addAll(locator.getLevelWiseResources(locator.getLevelID("Gateway")));
@@ -172,15 +162,13 @@ public class GeoClusterGen {
 //		maxC = Math.ceil(nodes.size() / metersPerNode);
 
 		/*
-		 * Para cada um dos nodos
+		 * Foreach of them
 		 */
 		for (int i = 0; i < nodes.size(); i++) {
-//        	atual: res_1
 			String atual = nodes.get(i);
-//			System.out.println("Verificando " + atual + "\n-----\n");
 			Integer responsavel = null;
 			/*
-			 * Inicializa os clusters no primeiro caso
+			 * Initializes the clusters for the first case
 			 */
 			if (clusters == null) {
 				clusters = new ArrayList<HashSet<String>>();
@@ -193,14 +181,17 @@ public class GeoClusterGen {
 				added.add(atual);
 			} else {
 				/*
-				 * Se fmv estiver vazio, procura a chave, percorrendo os clusters para achar o
-				 * FMV se fmv estiver vazio
+				 * If responsable is empty
 				 */
 				if (responsavel == null) {
+					/*
+					   Iterates each cluster 
+					 */
 					for (int j = 0; j < clusters.size(); j++) {
 						HashSet<String> lista = clusters.get(j);
 						/*
-						 * Para cada lista de clusters, Verifica se existe em alguma lista com seu id
+						   As they are in a group, checks if there is any cluster with the current node id 
+						   and returns the responsable of the cluster (proxy)
 						 */
 						for (String node : lista) {
 							if (node == atual) {
@@ -211,7 +202,8 @@ public class GeoClusterGen {
 					}
 				}
 				/*
-				 * Se mesmo assim não existir, o FMV É o próprio e é adicionado aos clusters
+				   If still, there is no responsable, the current node is a proxy (responsable) node
+				   and it is added to the clusters array
 				 */
 				if (responsavel == null) {
 					HashSet<String> listaZerada = new HashSet<String>();
@@ -225,8 +217,8 @@ public class GeoClusterGen {
 			}
 
 			/*
-			 * Para cada um dos proximos nodos, verifico se é menor que os blocos e se está
-			 * no range
+			  For each of the next nodes, we check if the blocks is not full (length < available - MAX)
+			  and if the node is within the Euclidian Distance (range - ANR)
 			 */
 			for (int j = 0; j < nodes.size(); j++) {
 				String proximoNodo = nodes.get(j);
@@ -243,22 +235,18 @@ public class GeoClusterGen {
 							suggestedRange)) {
 						clusters.get(responsavel).add(proximoNodo);
 						added.add(proximoNodo);
-//						System.out.printf("Nodos totais %s\n", nodes.size());
-//						System.out.println("Removeu indice " + j + " com valor " + proximoNodo);
+//						System.out.printf("Total node %s\n", nodes.size());
+//						System.out.println("Removed index " + j + " with value " + proximoNodo);
 					}
-				} else {
-					// cria
-
-				}
+				} 
 			}
-//			System.out.printf("O indice responsável por %s é %s que tem %s \n", atual, responsavel,
+//			System.out.printf("The responsable node of %s is %s that has %s nodes\n", atual, responsavel,
 //					clusters.get(responsavel));
 		}
-//		System.out.println("Total de clusters: " + clusters.size());
+//		System.out.println("Total clusters: " + clusters.size());
 		int count = 0;
 		Set<String> set = new HashSet<String>();
 		for (int c = 0; c < clusters.size(); c++) {
-//			System.out.printf("%s \n", clusters.get(c));
 			count += clusters.get(c).size();
 			set.addAll(clusters.get(c));
 		}
@@ -266,8 +254,8 @@ public class GeoClusterGen {
 		System.out.println("Times nodes were assigned:" + count);
 
 		/*
-		 * Pega só os clusters que tem mais de um nodo porquê pelo menos um dos nodos
-		 * precisa ser a proxy
+		  Gets only the clusters that has more than one node 
+		  since for each cluster, it is needed at least one proxy and one gateway (2 nodes)
 		 */
 
 		ArrayList<HashSet<String>> selected = new ArrayList<HashSet<String>>();
@@ -292,13 +280,7 @@ public class GeoClusterGen {
 		fogDevices.add(cloud);
 		Location mapaC = locator.getCoordinates(locator.getLevelWiseResources(locator.getLevelID("Cloud")).get(0));
 		CSV.write(String.valueOf(mapaC.latitude), String.valueOf(mapaC.longitude), "0", "0", "-1", "Datacenter");
-		/*
-		 * o tamanho do selected vai ser sempre igual ao do proxies
-		 */
-
-		/**
-		 * O ID É A CONCATENAÇÃO DO RES COM A LINHA
-		 */
+		
 
 		int count1 = 0;
 		for (int k = 0; k < selected.size(); k++) {
@@ -467,117 +449,38 @@ public class GeoClusterGen {
 	}
 
 	private static Application createApplication(String appId, int userId) {
-		Application application = Application.createApplication(appId, userId); // creates an empty application model
-																				// (empty directed graph)
+		Application application = Application.createApplication(appId, userId); 
 
-		/*
-		 * Adding modules (vertices) to the application model (directed graph)
-		 */
-		application.addAppModule("clientModule", 10); // adding module Client to the application model
-		application.addAppModule("processingModule", 10); // adding module Concentration Calculator to the application
-															// model
-		application.addAppModule("storageModule", 10); // adding module Connector to the application model
+		
+		application.addAppModule("clientModule", 10);
+		application.addAppModule("processingModule", 10); 
+		application.addAppModule("storageModule", 10); 
 
-		/*
-		 * Connecting the application modules (vertices) in the application model
-		 * (directed graph) with edges
-		 */
 		if (SENSOR_TRANSMISSION_TIME == 5.1)
-			application.addAppEdge("M-SENSOR", "clientModule", 2000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR); // adding
-																													// edge
-																													// from
-																													// EEG
-																													// (sensor)
-																													// to
-																													// Client
-																													// module
-																													// carrying
-																													// tuples
-																													// of
-																													// type
-																													// EEG
+			application.addAppEdge("M-SENSOR", "clientModule", 2000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR);
 		else
 			application.addAppEdge("M-SENSOR", "clientModule", 3000, 500, "M-SENSOR", Tuple.UP, AppEdge.SENSOR);
-		application.addAppEdge("clientModule", "processingModule", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE); // adding
-																														// edge
-																														// from
-																														// Client
-																														// to
-																														// Concentration
-																														// Calculator
-																														// module
-																														// carrying
-																														// tuples
-																														// of
-																														// type
-																														// _SENSOR
+
+		application.addAppEdge("clientModule", "processingModule", 3500, 500, "RAW_DATA", Tuple.UP, AppEdge.MODULE);
+
 		application.addAppEdge("processingModule", "storageModule", 1000, 1000, "PROCESSED_DATA", Tuple.UP,
-				AppEdge.MODULE); // adding periodic edge (period=1000ms) from Concentration Calculator to
-									// Connector module carrying tuples of type PLAYER_GAME_STATE
+				AppEdge.MODULE);
+
 		application.addAppEdge("processingModule", "clientModule", 14, 500, "ACTION_COMMAND", Tuple.DOWN,
-				AppEdge.MODULE); // adding edge from Concentration Calculator to Client module carrying tuples of
-									// type CONCENTRATION
+				AppEdge.MODULE); 
+
 		application.addAppEdge("clientModule", "M-DISPLAY", 1000, 500, "ACTUATION_SIGNAL", Tuple.DOWN,
-				AppEdge.ACTUATOR); // adding edge from Client module to Display (actuator) carrying tuples of type
-									// SELF_STATE_UPDATE
+				AppEdge.ACTUATOR); 
 
 		/*
 		 * Defining the input-output relationships (represented by selectivity) of the
 		 * application modules.
 		 */
-		application.addTupleMapping("clientModule", "M-SENSOR", "RAW_DATA", new FractionalSelectivity(1.0)); // 0.9
-																												// tuples
-																												// of
-																												// type
-																												// _SENSOR
-																												// are
-																												// emitted
-																												// by
-																												// Client
-																												// module
-																												// per
-																												// incoming
-																												// tuple
-																												// of
-																												// type
-																												// EEG
-		application.addTupleMapping("processingModule", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0)); // 1.0
-																														// tuples
-																														// of
-																														// type
-																														// SELF_STATE_UPDATE
-																														// are
-																														// emitted
-																														// by
-																														// Client
-																														// module
-																														// per
-																														// incoming
-																														// tuple
-																														// of
-																														// type
-																														// CONCENTRATION
-		application.addTupleMapping("processingModule", "RAW_DATA", "ACTION_COMMAND", new FractionalSelectivity(1.0)); // 1.0
-																														// tuples
-																														// of
-																														// type
-																														// CONCENTRATION
-																														// are
-																														// emitted
-																														// by
-																														// Concentration
-																														// Calculator
-																														// module
-																														// per
-																														// incoming
-																														// tuple
-																														// of
-																														// type
-																														// _SENSOR
+		application.addTupleMapping("clientModule", "M-SENSOR", "RAW_DATA", new FractionalSelectivity(1.0)); 
+		application.addTupleMapping("processingModule", "RAW_DATA", "PROCESSED_DATA", new FractionalSelectivity(1.0));
+		application.addTupleMapping("processingModule", "RAW_DATA", "ACTION_COMMAND", new FractionalSelectivity(1.0)); 
 		application.addTupleMapping("clientModule", "ACTION_COMMAND", "ACTUATION_SIGNAL",
-				new FractionalSelectivity(1.0)); // 1.0 tuples of type GLOBAL_STATE_UPDATE are emitted by Client module
-													// per incoming tuple of type GLOBAL_GAME_STATE
-
+				new FractionalSelectivity(1.0));
 		application.setSpecialPlacementInfo("storageModule", "cloud");
 		/*
 		 * Defining application loops to monitor the latency of. Here, we add only one
