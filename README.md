@@ -1,4 +1,24 @@
 # Cluster generator algorithm
+This repo presents the algorithm developed in the [paper](https://link.springer.com/chapter/10.1007/978-3-031-19945-5_3). 
+
+You can cite this project using:
+```
+@InProceedings{10.1007/978-3-031-19945-5_3,
+author="Martins, Victoria B.
+and de Macedo, Douglas D. J.
+and Pioli, La{\'e}rcio
+and Immich, Roger",
+editor="Barolli, Leonard",
+title="A Cluster Formation Algorithm for Fog Architectures Based on Mobility Parameters at a Geographically LAN Perspective",
+booktitle="Advances on P2P, Parallel, Grid, Cloud and Internet Computing",
+year="2023",
+publisher="Springer International Publishing",
+address="Cham",
+pages="25--36",
+}
+
+```
+
 ## Setup
 0. Configure your workspace as presented in [iFogSim](https://github.com/Cloudslab/iFogSim)
 
