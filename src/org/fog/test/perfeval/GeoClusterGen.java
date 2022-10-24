@@ -252,7 +252,7 @@ public class GeoClusterGen {
 		System.out.println("Times nodes were assigned:" + count);
 
 		/*
-		  Gets only the clusters that has more than one node 
+		  Gets only the clusters that have more than one node 
 		  since for each cluster, it is needed at least one proxy and one gateway (2 nodes)
 		 */
 
