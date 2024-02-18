@@ -29,6 +29,8 @@ address="Cham",
 pages="25--36",
 }
 ```
+## 3PGCIC presentation
 
+Please, refer [to](./3PGCIC___presentation.pdf).
 
 > Tip: Using Eclipse IDE? You can create a launch group to run an application multiple times without executing one by one. Run as >  Run Configurations > Launch Group > (right click) New Configuration > Add > (select the desired .java) > Launch mode (Run) > Post launch action (Wait until terminated) > OK
